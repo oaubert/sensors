@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+<style type="text/css">
+body{
+	margin: 0px;
+	padding: 0px;
+}
+#svg{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	background-color: #ffffff;
+}
+#value{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	z-index: 2;
+}
+#valuex{
+	color: #ff0000;
+}
+#valuey{
+	color: #00ff00;
+}
+#valuez{
+	color: #0000ff;
+}
+#valueacc{
+	color: #777;
+}
+</style>
+<title>Accelerometer data</title>
+</head>
+<body>
+
+  <div id="value">
+    <div><span>x:</span><span id="valuex" /></div>
+    <div><span>y:</span><span id="valuey" /></div>
+    <div><span>z:</span><span id="valuez" /></div>
+    <div><span>acc:</span><span id="valueacc" /></div>
+    <div><span>interval:</span><span id="interval" /></div>
+  </div>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" id="svg">
+    
+    <polyline id="upperline"  fill="none" stroke="#666666" stroke-width="10" points="" />
+    <polyline id="middleline" fill="none" stroke="#666666" stroke-width="10" points="" />
+    <polyline id="lowerline"  fill="none" stroke="#666666" stroke-width="10" points="" />
+    
+    <polyline id="svgacc"     fill="none" stroke="#000000" stroke-width="50" points="" />
+    <polyline id="svgx"       fill="none" stroke="#ff0000" stroke-width="30" points="" />
+    <polyline id="svgy"       fill="none" stroke="#00ff00" stroke-width="30" points="" />
+    <polyline id="svgz"       fill="none" stroke="#0000ff" stroke-width="30" points="" />
+    
+  </svg>
+  
+<script type="text/javascript">
+    var startup = function() {
+        
+        if (!window.DeviceMotionEvent) {
+            interval.textContent = "Device motion interface not supported. Nothing to see here.";
+            return;
+        } 
+
+        var size = 10000;
+        
+        var $ = function(id) { return document.getElementById(id); };
+        var pow = Math.pow;
+        
+        var basedtm = new Date().getTime();
+        var predtm = new Date().getTime();
+        
+        var valuex = $("valuex");
+        var valuey = $("valuey");
+        var valuez = $("valuez");
+        var valueacc = $("valueacc");
+        var interval = $("interval");
+        
+        var svg = $("svg");
+        var svgx = $("svgx");
+        var svgy = $("svgy");
+        var svgz = $("svgz");
+        var svgacc = $("svgacc");
+        var upperline = $("upperline");
+        var middleline = $("middleline");
+        var lowerline = $("lowerline");
+        
+        var data = [];
+        
+        svg.setAttribute("viewBox", [-10000,-5000,10000,10000].join(" "));
+        upperline .setAttribute("points", "-10000, -2500 0, -2500");
+        middleline.setAttribute("points", "-10000,     0 0,     0");
+        lowerline .setAttribute("points", "-10000,  2500 0,  2500");
+        
+        // Gather data
+        window.addEventListener("devicemotion", function(evt) {
+            var dtm = new Date().getTime();
+            var acc = evt.acceleration;
+            var x = acc.x;
+            var y = acc.y;
+            var z = acc.z;
+            var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2);
+            
+            data.push({ x: x,
+                        y:y,
+                        z: z,
+                        acc:acc,
+                        dtm: dtm});
+            
+            // Update immediate display
+            valuex.textContent = x.toFixed(4);
+            valuey.textContent = y.toFixed(4);
+            valuez.textContent = z.toFixed(4);
+            valueacc.textContent = acc.toFixed(4);
+            interval.textContent = dtm - predtm;
+
+            predtm = dtm;
+        }, false);
+
+        // Update SVG display
+        setInterval(function(){
+            var dtm = new Date().getTime();
+            var diffdtm = dtm - basedtm;
+            
+            while (data.length != 0) {
+                if (data[0].dtm <= dtm - size * 1) {
+                    data.shift();
+                } else {
+                    break;
+                }
+            }
+            
+            var aryx = [];
+            var aryy = [];
+            var aryz = [];
+            var aryacc = [];
+            data.forEach(function(obj) {
+                aryx.push(obj.dtm-dtm + "," + Math.round(-obj.x*size/4));
+                aryy.push(obj.dtm-dtm + "," + Math.round(-obj.y*size/4));
+                aryz.push(obj.dtm-dtm + "," + Math.round(-obj.z*size/4));
+                aryacc.push(obj.dtm-dtm + "," + Math.round(-obj.acc*size/4));
+            });
+            svgx.setAttribute("points",   aryx.join(" "));
+            svgy.setAttribute("points",   aryy.join(" "));
+            svgz.setAttribute("points",   aryz.join(" "));
+            svgacc.setAttribute("points", aryacc.join(" "));
+        }, 500);
+        
+    };
+    
+    startup();
+</script>
+
+</body>
+</html>
