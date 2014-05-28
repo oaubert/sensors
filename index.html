@@ -81,7 +81,16 @@ body{
         var valuez = $("valuez");
         var valueacc = $("valueacc");
         var interval = $("interval");
-        
+
+        var last = {
+            x: 0,
+            y: 0,
+            z: 0,
+            acc: 0,
+            dtm: 0
+        }
+        var factor = .2;
+
         var svg = $("svg");
         var svgx = $("svgx");
         var svgy = $("svgy");
@@ -102,16 +111,17 @@ body{
         window.addEventListener("devicemotion", function(evt) {
             var dtm = new Date().getTime();
             var acc = evt.acceleration;
-            var x = acc.x;
-            var y = acc.y;
-            var z = acc.z;
-            var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2);
+            var x = acc.x * factor + last.x * (1 - factor);
+            var y = acc.y * factor + last.y * (1 - factor);
+            var z = acc.z * factor + last.z * (1 - factor);
+            var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2) * factor + last.acc * (1 - factor);
             
-            data.push({ x: x,
-                        y:y,
-                        z: z,
-                        acc:acc,
-                        dtm: dtm});
+            last = { x: x,
+                     y: y,
+                     z: z,
+                     acc:acc,
+                     dtm: dtm};
+            data.push(last);
             
             // Update immediate display
             valuex.textContent = (x || 0).toFixed(4);
