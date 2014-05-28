@@ -110,10 +110,10 @@ body{
         // Gather data
         window.addEventListener("devicemotion", function(evt) {
             var dtm = new Date().getTime();
-            var acc = evt.acceleration;
+            var acc = evt.accelerationIncludingGravity;
             var x = acc.x * factor + last.x * (1 - factor);
             var y = acc.y * factor + last.y * (1 - factor);
-            var z = acc.z * factor + last.z * (1 - factor);
+            var z = acc.z * factor + last.z * (1 - factor) - 9.81;
             var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2) * factor + last.acc * (1 - factor);
             
             last = { x: x,
