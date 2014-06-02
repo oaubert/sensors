@@ -106,11 +106,11 @@ body{
 
         var data = [];
 
-        var socket = io('http://beta.sensorsbox.com/');
-        socket.get('http://beta.sensorsbox.com/api/v1/config/' + box_id, function (body, response) {
+        io.connect('http://beta.sensorsbox.com/');
+        io.socket.get('http://beta.sensorsbox.com/api/v1/config/' + box_id, function (body, response) {
             console.log("Connected to sensorsbox");
             setInterval(function(){
-                socket.post('http://beta.sensorsbox.com/api/v1/measure', {
+                io.socket.post('http://beta.sensorsbox.com/api/v1/measure', {
                     box: box_id,
                     sensor: sensor_id,
                     value: last.acc
