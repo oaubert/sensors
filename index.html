@@ -106,7 +106,7 @@ body{
 
         var data = [];
 
-        var socket = io();
+        var socket = io('http://beta.sensorsbox.com/');
         socket.get('http://beta.sensorsbox.com/api/v1/config/' + box_id, function (body, response) {
             console.log("Connected to sensorsbox");
             setInterval(function(){
