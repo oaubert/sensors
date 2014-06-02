@@ -46,36 +46,39 @@ body{
     <div><span>acc:</span><span id="valueacc" /></div>
     <div><span>interval:</span><span id="interval" /></div>
   </div>
-  
+
   <svg xmlns="http://www.w3.org/2000/svg" id="svg">
-    
+
     <polyline id="upperline"  fill="none" stroke="#666666" stroke-width="10" points="" />
     <polyline id="middleline" fill="none" stroke="#666666" stroke-width="10" points="" />
     <polyline id="lowerline"  fill="none" stroke="#666666" stroke-width="10" points="" />
-    
+
     <polyline id="svgacc"     fill="none" stroke="#000000" stroke-width="50" points="" />
     <polyline id="svgx"       fill="none" stroke="#ff0000" stroke-width="30" points="" />
     <polyline id="svgy"       fill="none" stroke="#00ff00" stroke-width="30" points="" />
     <polyline id="svgz"       fill="none" stroke="#0000ff" stroke-width="30" points="" />
-    
+
   </svg>
-  
+
+<script type="text/javascript" src="sails.io.js"></script>
 <script type="text/javascript">
     var startup = function() {
-        
+
         if (!window.DeviceMotionEvent) {
             interval.textContent = "Device motion interface not supported. Nothing to see here.";
             return;
-        } 
+        }
 
+        var box_id = '53851e164bd7fb0200a29164';
+        var sensor_id = '53851ea64bd7fb0200a29167';
         var size = 10000;
-        
+
         var $ = function(id) { return document.getElementById(id); };
         var pow = Math.pow;
-        
+
         var basedtm = new Date().getTime();
         var predtm = new Date().getTime();
-        
+
         var valuex = $("valuex");
         var valuey = $("valuey");
         var valuez = $("valuez");
@@ -99,14 +102,26 @@ body{
         var upperline = $("upperline");
         var middleline = $("middleline");
         var lowerline = $("lowerline");
-        
+
         var data = [];
-        
+
+        io.socket.get('http://beta.sensorsbox.com/api/v1/config/' + box_id, function (body, response) {
+            console.log("Connected to sensorsbox");
+            setInterval(function(){
+                io.socket.post('http://beta.sensorsbox.com/api/v1/measure', {
+                    box: box_id,
+                    sensor: sensor_id,
+                    value: last.acc
+                }, function (body, response) {
+                });
+            }, 2000);
+        })
+
         svg.setAttribute("viewBox", [-10000,-5000,10000,10000].join(" "));
         upperline .setAttribute("points", "-10000, -2500 0, -2500");
         middleline.setAttribute("points", "-10000,     0 0,     0");
         lowerline .setAttribute("points", "-10000,  2500 0,  2500");
-        
+
         // Gather data
         window.addEventListener("devicemotion", function(evt) {
             var dtm = new Date().getTime();
@@ -115,14 +130,14 @@ body{
             var y = acc.y * factor + last.y * (1 - factor);
             var z = acc.z * factor + last.z * (1 - factor) - 9.81;
             var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2) * factor + last.acc * (1 - factor);
-            
+
             last = { x: x,
                      y: y,
                      z: z,
                      acc:acc,
                      dtm: dtm};
             data.push(last);
-            
+
             // Update immediate display
             valuex.textContent = (x || 0).toFixed(4);
             valuey.textContent = (y || 0).toFixed(4);
@@ -131,13 +146,14 @@ body{
             interval.textContent = dtm - predtm;
 
             predtm = dtm;
+
         }, false);
 
         // Update SVG display
         setInterval(function(){
             var dtm = new Date().getTime();
             var diffdtm = dtm - basedtm;
-            
+
             while (data.length != 0) {
                 if (data[0].dtm <= dtm - size * 1) {
                     data.shift();
@@ -145,7 +161,7 @@ body{
                     break;
                 }
             }
-            
+
             var aryx = [];
             var aryy = [];
             var aryz = [];
@@ -161,9 +177,9 @@ body{
             svgz.setAttribute("points",   aryz.join(" "));
             svgacc.setAttribute("points", aryacc.join(" "));
         }, 500);
-        
+
     };
-    
+
     startup();
 </script>
 
