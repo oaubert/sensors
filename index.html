@@ -106,15 +106,18 @@ body{
 
         var data = [];
 
-        io.connect('http://beta.sensorsbox.com/');
+        var c = io.connect('http://beta.sensorsbox.com/');
+        console.log("Connect ", c);
         io.socket.get('http://beta.sensorsbox.com/api/v1/config/' + box_id, function (body, response) {
             console.log("Connected to sensorsbox");
             setInterval(function(){
-                io.socket.post('http://beta.sensorsbox.com/api/v1/measure', {
+                var data = {
                     box: box_id,
                     sensor: sensor_id,
                     value: last.acc
-                }, function (body, response) {
+                };
+                console.log(data);
+                io.socket.post('http://beta.sensorsbox.com/api/v1/measure', data, function (body, response) {
                 });
             }, 2000);
         })
@@ -127,10 +130,14 @@ body{
         // Gather data
         window.addEventListener("devicemotion", function(evt) {
             var dtm = new Date().getTime();
-            var acc = evt.accelerationIncludingGravity;
+            var acc = evt.acceleration;
+            if (acc.x === 0 && acc.y === 0 && acc.z === 0) {
+                acc = evt.accelerationIncludingGravity;
+                acc.z = acc.z - 9.81;
+            }
             var x = acc.x * factor + last.x * (1 - factor);
             var y = acc.y * factor + last.y * (1 - factor);
-            var z = acc.z * factor + last.z * (1 - factor) - 9.81;
+            var z = acc.z * factor + last.z * (1 - factor);
             var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2) * factor + last.acc * (1 - factor);
 
             last = { x: x,
