@@ -60,8 +60,8 @@ body{
 
   </svg>
 
-<script type="text/javascript" src="http://beta.sensorsbox.com/socket.io/socket.io.js"></script>
-<script type="text/javascript" src="sails.io.js"></script>
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript" src="tracemanager.js"></script>
 <script type="text/javascript">
     var startup = function() {
 
@@ -70,8 +70,6 @@ body{
             return;
         }
 
-        var box_id = '53851e164bd7fb0200a29164';
-        var sensor_id = '53851ea64bd7fb0200a29167';
         var size = 10000;
 
         var $ = function(id) { return document.getElementById(id); };
@@ -93,6 +91,7 @@ body{
             acc: 0,
             dtm: 0
         }
+        // Sliding window mean factor
         var factor = .3;
 
         var svg = $("svg");
@@ -104,36 +103,42 @@ body{
         var middleline = $("middleline");
         var lowerline = $("lowerline");
 
+        // event and interval handles
+        var display_loop = null;
+        var devicemotion_listener = null;
+
         var data = [];
+        window.data = data;
 
-        var c = io.connect('http://beta.sensorsbox.com/');
-        console.log("Connect ", c);
-        io.socket.get('http://beta.sensorsbox.com/api/v1/config/' + box_id, function (body, response) {
-            console.log("Connected to sensorsbox");
-            setInterval(function(){
-                var data = {
-                    box: box_id,
-                    sensor: sensor_id,
-                    value: last.acc
-                };
-                console.log(data);
-                io.socket.post('http://beta.sensorsbox.com/api/v1/measure', data, function (body, response) {
-                });
-            }, 2000);
-        })
-
-        svg.setAttribute("viewBox", [-10000,-5000,10000,10000].join(" "));
+        svg.setAttribute("viewBox", [-10000, -5000, 10000, 10000].join(" "));
         upperline .setAttribute("points", "-10000, -2500 0, -2500");
         middleline.setAttribute("points", "-10000,     0 0,     0");
         lowerline .setAttribute("points", "-10000,  2500 0,  2500");
 
+        var my_trace = tracemanager.init_trace("base", { url: "http://www.comin-ocw.org/trace/trace/",
+                                                         mode: 'w',
+                                                         requestmode: 'POST',
+                                                         syncmode: 'delayed',
+                                                         default_subject: 'sensor' });
+        my_trace.trace('SensorStart', { currenturl: document.URL });
+
+        var deactivate = function () {
+            // Deactivate all listeners
+            console.log("Deactivating all updates");
+            interval.textContent = "Updates deactivated";
+            window.removeEventListener("devicemotion", devicemotion_listener, false);
+            window.clearInterval(display_loop);
+            my_trace.set_sync_mode("none");
+        }
+
         // Gather data
-        window.addEventListener("devicemotion", function(evt) {
+        var devicemotion_listener = function(evt) {
             var dtm = new Date().getTime();
             var acc = evt.acceleration;
-            if (acc.x === 0 && acc.y === 0 && acc.z === 0) {
-                acc = evt.accelerationIncludingGravity;
-                acc.z = acc.z - 9.81;
+            if (acc.x === null) {
+                // Probably no real accelerometer in this device
+                deactivate();
+                return;
             }
             var x = acc.x * factor + last.x * (1 - factor);
             var y = acc.y * factor + last.y * (1 - factor);
@@ -146,6 +151,7 @@ body{
                      acc:acc,
                      dtm: dtm};
             data.push(last);
+            my_trace.trace('SensorData', last);
 
             // Update immediate display
             valuex.textContent = (x || 0).toFixed(4);
@@ -153,13 +159,10 @@ body{
             valuez.textContent = (z || 0).toFixed(4);
             valueacc.textContent = (acc || 0).toFixed(4);
             interval.textContent = dtm - predtm;
-
             predtm = dtm;
+        };
 
-        }, false);
-
-        // Update SVG display
-        setInterval(function(){
+        var update_display = function () {
             var dtm = new Date().getTime();
             var diffdtm = dtm - basedtm;
 
@@ -185,11 +188,19 @@ body{
             svgy.setAttribute("points",   aryy.join(" "));
             svgz.setAttribute("points",   aryz.join(" "));
             svgacc.setAttribute("points", aryacc.join(" "));
-        }, 500);
+        };
 
-    };
+        var activate = function () {
+            console.log("Activating event collection");
+            window.addEventListener("devicemotion", devicemotion_listener, false);
+            display_loop = setInterval(update_display, 1000);
+            my_trace.set_sync_mode("delayed");
+        };
 
-    startup();
+        activate();
+    }
+
+  startup();
 </script>
 
 </body>
