@@ -150,28 +150,17 @@ body{
                 return;
             }
             var x = acc.x * factor + last.x * (1 - factor);
-            var dx = last.x - x;
             var y = acc.y * factor + last.y * (1 - factor);
-            var dy = last.y - y;
             var z = acc.z * factor + last.z * (1 - factor);
-            var dz = last.z - z;
             var acc = pow(pow(x, 2) + pow(y, 2) + pow(z, 2), 1/2) * factor + last.acc * (1 - factor);
-            var dacc = last.acc - acc;
 
             last = { x: x,
                      y: y,
                      z: z,
                      acc:acc,
                      dtm: dtm};
-            lastdiff = {
-                dx: dx,
-                dy: dy,
-                dz: dz,
-                dacc: dacc,
-                dtm: dtm
-            }
-            data.push(lastdiff);
-            buffer.push(lastdiff);
+            data.push(last);
+            buffer.push(last);
 
             if (false) {
                 // Update immediate display
@@ -188,7 +177,7 @@ body{
             return data.dtm + '// sensopulse.' + field + '{userid=' + USERID + '} ' + data[field];
         }
         var datagts = function(data) {
-            return [ 'dx', 'dy', 'dz', 'dacc', 'dtm' ].map( function (field) {
+            return [ 'x', 'y', 'z', 'acc', 'dtm' ].map( function (field) {
                 return gts(data, field);
             }).join("\n");
         }
@@ -211,10 +200,10 @@ body{
             var diffdtm = dtm - basedtm;
 
             if (data.length > 0) {
-                valuex.textContent = (lastdiff.dx || 0).toFixed(4);
-                valuey.textContent = (lastdiff.dy || 0).toFixed(4);
-                valuez.textContent = (lastdiff.dz || 0).toFixed(4);
-                valueacc.textContent = (lastdiff.dacc || 0).toFixed(4);
+                valuex.textContent = (last.x || 0).toFixed(4);
+                valuey.textContent = (last.y || 0).toFixed(4);
+                valuez.textContent = (last.z || 0).toFixed(4);
+                valueacc.textContent = (last.acc || 0).toFixed(4);
                 interval.textContent = diffdtm;
             }
 
@@ -231,10 +220,10 @@ body{
             var aryz = [];
             var aryacc = [];
             data.forEach(function(obj) {
-                aryx.push(obj.dtm-dtm + "," + Math.round(-obj.dx*size/4));
-                aryy.push(obj.dtm-dtm + "," + Math.round(-obj.dy*size/4));
-                aryz.push(obj.dtm-dtm + "," + Math.round(-obj.dz*size/4));
-                aryacc.push(obj.dtm-dtm + "," + Math.round(-obj.dacc*size/4));
+                aryx.push(obj.dtm-dtm + "," + Math.round(-obj.x*size/4));
+                aryy.push(obj.dtm-dtm + "," + Math.round(-obj.y*size/4));
+                aryz.push(obj.dtm-dtm + "," + Math.round(-obj.z*size/4));
+                aryacc.push(obj.dtm-dtm + "," + Math.round(-obj.acc*size/4));
             });
             svgx.setAttribute("points",   aryx.join(" "));
             svgy.setAttribute("points",   aryy.join(" "));
