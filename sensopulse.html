@@ -43,7 +43,7 @@ var color = d3.scale.linear()
 
 var arc = d3.svg.arc()
     .startAngle(0)
-    .endAngle(function(d) { return d.value * 2 * Math.PI; })
+    .endAngle(.6 * Math.PI)
     .innerRadius(function(d) { return d.index * radius; })
     .outerRadius(function(d) { return (d.index + spacing) * radius; });
 
@@ -55,11 +55,10 @@ var svg = d3.select("body").append("svg")
 
 var field = svg.selectAll("g")
     .data(fields)
-  .enter().append("g");
+  .enter().append("g").attr("class", "track");
 
 field.append("path");
-
-field.append("text");
+field.append("circle");
 
 d3.transition().duration(0).each(tick);
 
@@ -71,13 +70,15 @@ function tick() {
       .data(fields)
       .each(function(d) { d.previousValue = this._value; });
 
-  field.select("path")
+  field
+    .attr("transform", function (d) { return "rotate(" + ((d.value || 0) % 360) + ")" })
+    .select("path")
     .transition()
       .ease("elastic")
       .attrTween("d", arcTween)
-      .style("fill", function(d) { return color(d.value); });
+      .style("fill", function(d) { return color(d.index); });
 
-  setTimeout(tick, 1000 - Date.now() % 1000);
+  setTimeout(tick, 100);
 }
 
 function arcTween(d) {
@@ -86,14 +87,14 @@ function arcTween(d) {
 }
 
 function fields() {
-  var now = new Date;
+  var now = new Date().getTime();
   return [
-    {index: .7, value: now.getSeconds() / 60},
-    {index: .6, value: now.getMinutes() / 60},
-    {index: .5, value: now.getHours() / 24},
-    {index: .3, value: now.getDay() / 7},
-    {index: .2, value: (now.getDate() - 1) / (32 - new Date(now.getYear(), now.getMonth(), 32).getDate())},
-    {index: .1, value: now.getMonth() / 12}
+    {index: .7, value: .01 * now },
+    {index: .6, value: .002 * now},
+    {index: .5, value: .2 * now},
+    {index: .3, value: .05 * now},
+    {index: .2, value: .9 * now},
+    {index: .1, value: .4 * now }
   ];
 }
 
