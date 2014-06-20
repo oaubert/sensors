@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+ 
+svg {
+  font: 10px sans-serif;
+}
+ 
+.line {
+  fill: none;
+  stroke: #66f;
+  stroke-width: 1.5px;
+}
+ 
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+#legend {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+}
+ 
+</style>
+<body>
+<div id="legend"></div>
+
+<script src="d3.v3.min.js"></script>
+<script type="text/javascript">
+/* 
+    ExpressivIsBlink
+    ExpressivIsLeftWink
+    ExpressivIsLookingLeft
+    ExpressivIsLookingRight
+    ExpressivIsRightWink
+    ExpressivStateEyeBrow
+    ExpressivStateFurrow
+    ExpressivStateSmile
+    'EmotivData.LongTermExcitement'
+    'EmotivData.ShortTermExcitement'
+    'EmotivData.EngagementBoredom'
+    'fr.smoozi.rt.fc'
+    'com.smartsensing.data.Hr'
+*/
+var TOKEN = 'jc20140624.read';
+var SUBSCRIPTION = '~.*{}';
+// var SUBSCRIPTION = '=' + NAME + '{}'
+var VMAX = 1;
+if (document.location.hash) {
+    VMAX = Number(document.location.hash.substr(1));
+}
+if (document.location.search) {
+    SUBSCRIPTION = '~.*' + document.location.search.substr(1) + '.*{}';
+}
+
+data = {};
+
+var n = 100;
+
+var margin = {top: 20, right: 20, bottom: 20, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+ 
+var x = d3.scale.linear()
+    .domain([0, n - 1])
+    .range([0, 2 * Math.PI]);
+ 
+var y = d3.scale.linear()
+    .domain([-VMAX, VMAX])
+    .range([0, height / 2]);
+ 
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+ 
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+ 
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + y(0) + ")")
+    .call(d3.svg.axis().scale(x).orient("bottom"));
+ 
+svg.append("g")
+    .attr("class", "y axis")
+    .call(d3.svg.axis().scale(y).orient("left"));
+
+function Graph(name) {
+    var data = [];
+    var color = "hsl(" + Math.random() * 360 + ",100%,50%)";
+    var line = d3.svg.line.radial()
+        .angle(function(d, i) { return x(i); })
+        .radius(function(d, i) { return y(d); });
+    
+    var path = svg.append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+        .append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("d", line)
+        .style("stroke", color);
+
+    d3.select("#legend").append("p").text(name).attr("style", "color: " + color);
+    return { name: name, path: path, line: line, data: data, color: color };
+  };
+
+GRAPHS = {}
+
+function tick() {
+    var g;
+
+    // redraw the lines, and slide them to the left if necessary;
+    for (var n in GRAPHS) {
+        g = GRAPHS[n];
+        // console.log("Tick ", n, g.data);
+        g.path
+            .attr("d", g.line)
+            .attr("transform", null)
+            .transition()
+            .duration(100)
+            .ease("linear")
+            .attr("transform", "translate(" + x(-1) + ",0)");
+
+        // pop old data points off the front
+        if (g.data.length > n) {
+            g.data.shift();
+        }
+    }
+}
+
+var ws = new WebSocket("ws://api0.cityzendata.net:8080/api/v0/plasma");
+var regexp = /^(\d+)\/([-\d.]+:[-\d.]+)?\/(\d*)\s+([.\w]+){(.*)}\s+(-?[.\d]+)/;
+var fields = { ts: 1,
+               latlon: 2,
+               elev: 3,
+               name: 4,
+               user: 5,
+               value: 6 };
+
+ws.onopen = function (event) {
+    ws.send("SUBSCRIBE " + TOKEN + " " + SUBSCRIPTION);
+    ws.send("SUBSCRIPTIONS");
+};
+ws.onmessage = function (event) {
+    // 1402413819119000// EmotivData.ExpressivIsRightWink{.app=jc20140624,userId=1} 0 
+    var r = regexp.exec(event.data);
+    if (r !== null) {
+        if (GRAPHS[r[fields.name]] === undefined) {
+            GRAPHS[r[fields.name]] = Graph(r[fields.name]);
+        }
+        v = Number(r[fields.value]);
+        GRAPHS[r[fields.name]].data.push(v);
+        //{ ts: new Date(Number(r[fields.ts])), v: v });
+    } else {
+        console.log("Non matching line", event.data);
+    }
+}
+
+tick();
+setInterval(tick, 500);
+
+</script>
+</body>
+
