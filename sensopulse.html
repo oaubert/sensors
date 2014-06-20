@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<!-- adapted from http://bl.ocks.org/mbostock/1096355 by mbostock -->
 <style type="text/css">
 body {
   background: #222;
@@ -27,7 +28,7 @@ var arc = d3.svg.arc()
     .startAngle(0)
     .endAngle(.5 * Math.PI)
     .innerRadius(function(d) { return d.index * radius; })
-    .outerRadius(function(d) { return (d.index + spacing) * radius; });
+    .outerRadius(function(d) { return d.index * radius + 1; });
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
