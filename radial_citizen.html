@@ -85,7 +85,7 @@ svg.append("defs").append("clipPath")
     .attr("height", height);
  
 svg.append("g")
-    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+    .attr("transform", "translate(" + width / 2 + ",0)")
     .attr("class", "y axis")
     .call(d3.svg.axis().scale(y).orient("left"));
 
