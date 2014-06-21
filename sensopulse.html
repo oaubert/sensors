@@ -73,15 +73,15 @@ function arcTween(d) {
 }
 
 function fields() {
-  var now = new Date().getTime();
+  var t = new Date().getTime();
 // FIXME: use sensor values instead of hardcoded speed values
   return [
-    {index: .7, value: .1 * now },
-    {index: .6, value: .02 * now},
-    {index: .5, value: .2 * now},
-    {index: .3, value: .05 * now},
-    {index: .2, value: .3 * now},
-    {index: .1, value: .4 * now }
+    {index: .7, value: .1 * t },
+    {index: .6, value: .02 * t},
+    {index: .5, value: .2 * t},
+    {index: .3, value: .05 * t},
+    {index: .2, value: .3 * t},
+    {index: .1, value: .4 * t }
   ];
 }
 
