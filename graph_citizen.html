@@ -50,26 +50,43 @@ COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
 var SUBSCRIPTION = '~.*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
-var VMAX = 1;
+var VMAX = 100;
 if (document.location.hash) {
     VMAX = Number(document.location.hash.substr(1));
 }
 if (document.location.search) {
     SUBSCRIPTION = '~.*' + document.location.search.substr(1) + '.*{}';
 }
-console.log(document.location.hash, document.location.search);
-console.log(VMAX, SUBSCRIPTION);
 
-data = {};
+// Multiplying factor to use for each type of data to put values in
+// [-100, 100] range.
+var FACTOR = {
+    'EmotivData.ExpressivIsBlink': 50.0,
+    'EmotivData.ExpressivIsLeftWink': 50.0,
+    'EmotivData.ExpressivIsLookingLeft': 50.0,
+    'EmotivData.ExpressivIsLookingRight': 50.0,
+    'EmotivData.ExpressivIsRightWink': 50.0,
+    'EmotivData.ExpressivStateEyeBrow': 50.0,
+    'EmotivData.ExpressivStateFurrow': 50.0,
+    'EmotivData.ExpressivStateSmile': 50.0,
+    'EmotivData.LongTermExcitement': 100.0,
+    'EmotivData.ShortTermExcitement': 100.0,
+    'EmotivData.EngagementBoredom': 100.0,
+    'fr.smoozi.rt.fc': 100.0 / 240,
+    'com.smartsensing.data.Hr':  100.0 / 130
+}
 
-var n = 100;
+// Duration in microseconds
+var duration = 30000000;
+var t0 = null;
+var last_t = null;
 
 var margin = {top: 20, right: 20, bottom: 20, left: 40},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
-    .domain([0, n - 1])
+    .domain([0, duration])
     .range([0, width]);
 
 var y = d3.scale.linear()
@@ -102,9 +119,9 @@ function Graph(name) {
     var color = COLORS.shift();
 
     var line = d3.svg.line()
-        .x(function(d, i) { return x(i); })
-        .y(function(d, i) { return y(d); });
-    
+        .x(function(d, i) { return x(d.ts - t0); })
+        .y(function(d, i) { return y(d.v * (FACTOR[name] || 1)); });
+
     var path = svg.append("g")
         .attr("clip-path", "url(#clip)")
         .append("path")
@@ -121,21 +138,20 @@ GRAPHS = {}
 
 function tick() {
     var g;
+    var last;
+
+    // Check if we need to move t0
+    if (last_t - duration > t0) {
+        t0 = last_t - duration;
+        console.log("New t0", t0);
+    }
 
     // redraw the lines, and slide them to the left if necessary;
     for (var n in GRAPHS) {
         g = GRAPHS[n];
-        // console.log("Tick ", n, g.data);
-        g.path
-            .attr("d", g.line)
-            .attr("transform", null)
-            .transition()
-            .duration(100)
-            .ease("linear")
-            .attr("transform", "translate(" + x(-1) + ",0)");
-
+        g.path.attr("d", g.line);
         // pop old data points off the front
-        if (g.data.length > n) {
+        while (g.data.length && g.data[0].ts < t0 - 1000) {
             g.data.shift();
         }
     }
@@ -155,15 +171,18 @@ ws.onopen = function (event) {
     ws.send("SUBSCRIPTIONS");
 };
 ws.onmessage = function (event) {
-    // 1402413819119000// EmotivData.ExpressivIsRightWink{.app=jc20140624,userId=1} 0 
+    // 1402413819119000// EmotivData.ExpressivIsRightWink{.app=jc20140624,userId=1} 0
     var r = regexp.exec(event.data);
     if (r !== null) {
+        last_t = Number(r[fields.ts]);
+        if (t0 === null) {
+            t0 = last_t;
+        }
         if (GRAPHS[r[fields.name]] === undefined) {
             GRAPHS[r[fields.name]] = Graph(r[fields.name]);
         }
         v = Number(r[fields.value]);
-        GRAPHS[r[fields.name]].data.push(v);
-        //{ ts: new Date(Number(r[fields.ts])), v: v });
+        GRAPHS[r[fields.name]].data.push({ ts: last_t, v: v });
     } else {
         console.log("Non matching line", event.data);
     }
