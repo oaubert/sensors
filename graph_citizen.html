@@ -45,6 +45,8 @@ svg {
     'fr.smoozi.rt.fc'
     'com.smartsensing.data.Hr'
 */
+var COLORS = d3.scale.category20b().range();
+COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
 var SUBSCRIPTION = '~.*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
@@ -97,7 +99,8 @@ svg.append("g")
 
 function Graph(name) {
     var data = [];
-    var color = "hsl(" + Math.random() * 360 + ",100%,50%)";
+    var color = COLORS.shift();
+
     var line = d3.svg.line()
         .x(function(d, i) { return x(i); })
         .y(function(d, i) { return y(d); });
