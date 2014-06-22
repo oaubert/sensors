@@ -123,6 +123,7 @@ function Graph(name) {
         .y(function(d, i) { return y(d.v * (FACTOR[name] || 1)); });
 
     var path = svg.append("g")
+        .attr("data-name", name)
         .attr("clip-path", "url(#clip)")
         .append("path")
         .datum(data)
