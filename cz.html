@@ -174,7 +174,7 @@ body{
         };
 
         var gts = function (data, field) {
-            return data.dtm + '// sensopulse.' + field + '{userid=' + USERID + '} ' + data[field];
+            return (data.dtm * 1000) + '// sensopulse.' + field + '{userid=' + USERID + '} ' + data[field];
         }
         var datagts = function(data) {
             return [ 'x', 'y', 'z', 'acc', 'dtm' ].map( function (field) {
