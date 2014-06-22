@@ -119,16 +119,17 @@ svg.append("g")
     .attr("class", "y axis")
     .call(d3.svg.axis().scale(y).orient("left"));
 
-function Graph(name) {
+function Graph(name, sensorlabel) {
     var data = [];
     var color = COLORS.shift();
 
     var line = d3.svg.line()
         .x(function(d, i) { return x(d.ts - t0); })
-        .y(function(d, i) { return y(d.v * (FACTOR[name] || 1)); });
+        .y(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
         .attr("data-name", name)
+        .attr("data-sensor", sensorlabel)
         .attr("clip-path", "url(#clip)")
         .append("path")
         .datum(data)
@@ -163,13 +164,15 @@ function tick() {
 }
 
 var ws = new WebSocket("ws://api0.cityzendata.net:8080/api/v0/plasma");
-var regexp = /^(\d+)\/([-\d.]+:[-\d.]+)?\/(\d*)\s+([.\w]+){(.*)}\s+(-?[.\d]+)/;
+var regexp = /^(\d+)\/([-\d.]+:[-\d.]+)?\/(\d*)\s+([.\w]+){(.*)}\s+(-?[.\d]+)(E-?\d+)?/;
+var user_regexp = /user[iI]d=([^,\}]+)/;
 var fields = { ts: 1,
                latlon: 2,
                elev: 3,
                name: 4,
-               user: 5,
-               value: 6 };
+               param: 5,
+               value: 6,
+               factor: 7};
 
 ws.onopen = function (event) {
     ws.send("SUBSCRIBE " + TOKEN + " " + SUBSCRIPTION);
@@ -178,16 +181,24 @@ ws.onopen = function (event) {
 ws.onmessage = function (event) {
     // 1402413819119000// EmotivData.ExpressivIsRightWink{.app=jc20140624,userId=1} 0
     var r = regexp.exec(event.data);
+    var r_param;
+    var name;
     if (r !== null) {
         last_t = Number(r[fields.ts]);
         if (t0 === null) {
             t0 = last_t;
         }
-        if (GRAPHS[r[fields.name]] === undefined) {
-            GRAPHS[r[fields.name]] = Graph(r[fields.name]);
+        r_param = user_regexp.exec(r[fields.param]);
+        if (r_param !== null) {
+            name = r[fields.name] + '-' + r_param[1];
+        } else {
+            name = r[fields.name];
         }
-        v = Number(r[fields.value]);
-        GRAPHS[r[fields.name]].data.push({ ts: last_t, v: v });
+        if (GRAPHS[name] === undefined) {
+            GRAPHS[name] = Graph(name, r[fields.name]);
+        }
+        v = Number(r[fields.value] + (r[fields.factor] || ""));
+        GRAPHS[name].data.push({ ts: last_t, v: v });
     } else {
         console.log("Non matching line", event.data);
     }
