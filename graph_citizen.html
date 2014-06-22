@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
- 
+
 svg {
   font: 10px sans-serif;
 }
- 
+
 .line {
   fill: none;
   stroke: #66f;
   stroke-width: 1.5px;
 }
- 
+
 .axis path,
 .axis line {
   fill: none;
@@ -23,14 +23,14 @@ svg {
   right: 2px;
   bottom: 2px;
 }
- 
+
 </style>
 <body>
 <div id="legend"></div>
 
 <script src="d3.v3.min.js"></script>
 <script type="text/javascript">
-/* 
+/*
     ExpressivIsBlink
     ExpressivIsLeftWink
     ExpressivIsLookingLeft
@@ -67,27 +67,27 @@ var n = 100;
 var margin = {top: 20, right: 20, bottom: 20, left: 40},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
- 
+
 var x = d3.scale.linear()
     .domain([0, n - 1])
     .range([0, width]);
- 
+
 var y = d3.scale.linear()
     .domain([-VMAX, VMAX])
     .range([height, 0]);
- 
+
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
- 
+
 svg.append("defs").append("clipPath")
     .attr("id", "clip")
   .append("rect")
     .attr("width", width)
     .attr("height", height);
- 
+
 svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(0," + y(0) + ")")
@@ -174,4 +174,3 @@ setInterval(tick, 500);
 
 </script>
 </body>
-
