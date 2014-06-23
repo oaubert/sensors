@@ -28,6 +28,7 @@ svg {
 <body>
 <div id="legend"></div>
 
+<script src="sensorsbox-client.min.js"></script>
 <script src="d3.v3.min.js"></script>
 <script type="text/javascript">
 
@@ -63,7 +64,9 @@ var FACTOR = {
     'sensopulse.x': 100.0 / 4,
     'sensopulse.y': 100.0 / 4,
     'sensopulse.z': 100.0 / 4,
-    'sensopulse.acc': 100.0 / 10
+    'sensopulse.acc': 100.0 / 10,
+    '5399d19e0491140200114b7b': 100, // Mobile
+    '538e3d734793150200b10653': 100.0 / 1023 // Sound
 }
 
 // Duration in microseconds
@@ -189,6 +192,26 @@ ws.onmessage = function (event) {
         console.log("Non matching line", event.data);
     }
 }
+
+  var SENSOR = '538e3d734793150200b10653'; // Sound (box)
+//  var SENSOR = '5399d19e0491140200114b7b'; // Test (box)
+  // Sensorsbox
+  var sbConnection = new SensorsBox.Connection({verbose: false});
+  window.sbConnection = sbConnection;
+  sbConnection.on('connect', function(){
+      GRAPHS[SENSOR] = Graph("Sound", SENSOR);
+      sbConnection.watchSensor(SENSOR, function(err, sensor) {
+          console.log('successfully watching ' + sensor.name);
+      });
+  })
+  sbConnection.on('measure', function(measure) {
+      if (t0 === null)
+          t0 = 1000 * new Date().getTime();
+      GRAPHS[SENSOR].data.push({ ts: 1000 * new Date().getTime(),
+                                 v: Number(measure.data.value) });
+  });
+
+// Main loop
 
 tick();
 setInterval(tick, 500);
