@@ -100,11 +100,6 @@ svg.append("defs").append("clipPath")
     .attr("height", height);
 
 svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + y(0) + ")")
-    .call(d3.svg.axis().scale(x).orient("bottom").tickFormat(function(d) { return d / 1e6 }));
-
-svg.append("g")
     .attr("class", "y axis")
     .call(d3.svg.axis().scale(y).orient("left"));
 
@@ -152,6 +147,8 @@ function tick() {
     }
 }
 
+
+// Citizendata
 var ws = new WebSocket("ws://api0.cityzendata.net:8080/api/v0/plasma");
 var regexp = /^(\d+)\/([-\d.]+:[-\d.]+)?\/(\d*)\s+([.\w]+){(.*)}\s+(-?[.\d]+)(E-?\d+)?/;
 var user_regexp = /user[iI]d=([^,\}]+)/;
