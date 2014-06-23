@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+svg {
+  font: 10px sans-serif;
+}
+
+.line {
+  fill: none;
+  stroke: #66f;
+  stroke-width: 1.5px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+#legend {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+}
+
+</style>
+<body>
+<div id="legend"></div>
+
+<script src="d3.v3.min.js"></script>
+<script type="text/javascript">
+
+var COLORS = d3.scale.category20c().range();
+COLORS = COLORS.concat(COLORS);
+var TOKEN = 'jc20140624.read';
+var SUBSCRIPTION = '~.*{}';
+// var SUBSCRIPTION = '=' + NAME + '{}'
+var VMAX = 100;
+if (document.location.hash) {
+    VMAX = Number(document.location.hash.substr(1));
+}
+if (document.location.search) {
+    SUBSCRIPTION = '~.*' + document.location.search.substr(1) + '.*{}';
+}
+
+// Multiplying factor to use for each type of data to put values in
+// [-100, 100] range.
+var FACTOR = {
+    'EmotivData.ExpressivIsBlink': 50.0,
+    'EmotivData.ExpressivIsLeftWink': 50.0,
+    'EmotivData.ExpressivIsLookingLeft': 50.0,
+    'EmotivData.ExpressivIsLookingRight': 50.0,
+    'EmotivData.ExpressivIsRightWink': 50.0,
+    'EmotivData.ExpressivStateEyeBrow': 50.0,
+    'EmotivData.ExpressivStateFurrow': 50.0,
+    'EmotivData.ExpressivStateSmile': 50.0,
+    'EmotivData.LongTermExcitement': 100.0,
+    'EmotivData.ShortTermExcitement': 100.0,
+    'EmotivData.EngagementBoredom': 100.0,
+    'fr.smoozi.rt.fc': 100.0 / 240,
+    'com.smartsensing.data.Hr':  100.0 / 130,
+    'sensopulse.x': 100.0 / 4,
+    'sensopulse.y': 100.0 / 4,
+    'sensopulse.z': 100.0 / 4,
+    'sensopulse.acc': 100.0 / 10
+}
+
+// Duration in microseconds
+var duration = 30000000;
+var t0 = null;
+var last_t = null;
+
+var margin = {top: 20, right: 20, bottom: 20, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .domain([0, duration])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([-VMAX, VMAX])
+    .range([height, 0])
+    .clamp(true);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + y(0) + ")")
+    .call(d3.svg.axis().scale(x).orient("bottom").tickFormat(function(d) { return d / 1e6 }));
+
+svg.append("g")
+    .attr("class", "y axis")
+    .call(d3.svg.axis().scale(y).orient("left"));
+
+function Graph(name, sensorlabel) {
+    var data = [];
+    var color = COLORS.shift();
+
+    var line = d3.svg.line()
+        .x(function(d, i) { return x(d.ts - t0); })
+        .y(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
+
+    var path = svg.append("g")
+        .attr("data-name", name)
+        .attr("data-sensor", sensorlabel)
+        .attr("clip-path", "url(#clip)")
+        .append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("d", line)
+        .style("stroke", color);
+
+    d3.select("#legend").append("p").text(name).attr("style", "color: " + color);
+    return { name: name, path: path, line: line, data: data, color: color };
+  };
+
+GRAPHS = {}
+
+function tick() {
+    var g;
+    var last;
+
+    // Check if we need to move t0
+    if (last_t - duration > t0) {
+        t0 = last_t - duration;
+    }
+
+    // redraw the lines, and slide them to the left if necessary;
+    for (var n in GRAPHS) {
+        g = GRAPHS[n];
+        g.path.attr("d", g.line);
+        // pop old data points off the front
+        while (g.data.length && g.data[0].ts < t0 - 1000) {
+            g.data.shift();
+        }
+    }
+}
+
+var ws = new WebSocket("ws://api0.cityzendata.net:8080/api/v0/plasma");
+var regexp = /^(\d+)\/([-\d.]+:[-\d.]+)?\/(\d*)\s+([.\w]+){(.*)}\s+(-?[.\d]+)(E-?\d+)?/;
+var user_regexp = /user[iI]d=([^,\}]+)/;
+var fields = { ts: 1,
+               latlon: 2,
+               elev: 3,
+               name: 4,
+               param: 5,
+               value: 6,
+               factor: 7};
+
+ws.onopen = function (event) {
+    ws.send("SUBSCRIBE " + TOKEN + " " + SUBSCRIPTION);
+    ws.send("SUBSCRIPTIONS");
+};
+ws.onmessage = function (event) {
+    // 1402413819119000// EmotivData.ExpressivIsRightWink{.app=jc20140624,userId=1} 0
+    var r = regexp.exec(event.data);
+    var r_param;
+    var name;
+    if (r !== null) {
+        last_t = Number(r[fields.ts]);
+        if (t0 === null) {
+            t0 = last_t;
+        }
+        r_param = user_regexp.exec(r[fields.param]);
+        if (r_param !== null) {
+            name = r[fields.name] + '-' + r_param[1];
+        } else {
+            name = r[fields.name];
+        }
+        if (GRAPHS[name] === undefined) {
+            GRAPHS[name] = Graph(name, r[fields.name]);
+        }
+        v = Number(r[fields.value] + (r[fields.factor] || ""));
+        GRAPHS[name].data.push({ ts: last_t, v: v });
+    } else {
+        console.log("Non matching line", event.data);
+    }
+}
+
+tick();
+setInterval(tick, 500);
+
+</script>
+</body>
