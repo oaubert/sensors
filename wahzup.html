@@ -39,7 +39,7 @@ svg {
 var COLORS = d3.scale.category20c().range();
 COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
-var SUBSCRIPTION = '~.*(acc|TermExcitement|EngagementBoredom|smoozi.rt.fc).*{}';
+var SUBSCRIPTION = '~.*(acc|Gyro|TermExcitement|EngagementBoredom|smoozi.rt.fc).*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
 var VMAX = 100;
 if (document.location.hash) {
@@ -84,7 +84,7 @@ var margin = {top: 10, right: 10, bottom: 10, left: 10},
 
 var x = d3.scale.linear()
     .domain([0, duration])
-    .range([0, 2 * Math.PI]);
+    .range([2 * Math.PI, 0]);
 
 var y = d3.scale.linear()
     .domain([-VMAX, VMAX])
