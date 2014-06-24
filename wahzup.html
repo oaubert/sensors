@@ -84,11 +84,11 @@ var margin = {top: 20, right: 20, bottom: 20, left: 40},
 
 var x = d3.scale.linear()
     .domain([0, duration])
-    .range([0, width]);
+    .range([0, 2 * Math.PI]);
 
 var y = d3.scale.linear()
     .domain([-VMAX, VMAX])
-    .range([height, 0])
+    .range([0, height / 2])
     .clamp(true);
 
 var svg = d3.select("body").append("svg")
@@ -105,20 +105,21 @@ svg.append("defs").append("clipPath")
 
 //svg.append("g")
 //    .attr("class", "y axis")
+//    .attr("transform", "translate(" + width /2 + ",0)")
 //    .call(d3.svg.axis().scale(y).orient("left"));
 
 function Graph(name, sensorlabel) {
     var data = [];
     var color = COLORS.shift();
 
-    var line = d3.svg.line()
-        .x(function(d, i) { return x(d.ts - t0); })
-        .y(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
+    var line = d3.svg.line.radial()
+        .angle(function(d, i) { return x(d.ts - t0); })
+        .radius(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
         .attr("data-name", name)
         .attr("data-sensor", sensorlabel)
-        .attr("clip-path", "url(#clip)")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
         .append("path")
         .datum(data)
         .attr("class", "line")
