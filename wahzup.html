@@ -39,7 +39,7 @@ svg {
 var COLORS = d3.scale.category20c().range();
 COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
-var SUBSCRIPTION = '~.*(acc|smoozi.rt.fc).*{}';
+var SUBSCRIPTION = '~.*(acc|Gyro|TermExcitement|EngagementBoredom|smoozi.rt.fc).*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
 var VMAX = 100;
 if (document.location.hash) {
@@ -76,7 +76,6 @@ var FACTOR = {
 // Duration in microseconds
 var duration = 30000000;
 var t0 = null;
-var T0 = {};
 var last_t = null;
 
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -109,13 +108,12 @@ svg.append("defs").append("clipPath")
 //    .attr("transform", "translate(" + width /2 + ",0)")
 //    .call(d3.svg.axis().scale(y).orient("left"));
 
-function Graph(name, sensorlabel, t0) {
+function Graph(name, sensorlabel) {
     var data = [];
     var color = COLORS.shift();
 
-    T0[sensorlabel] = t0;
     var line = d3.svg.line.radial()
-        .angle(function(d, i) { return x(d.ts - T0[sensorlabel]); })
+        .angle(function(d, i) { return x(d.ts - t0); })
         .radius(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
@@ -129,7 +127,7 @@ function Graph(name, sensorlabel, t0) {
         .style("stroke", color);
 
     d3.select("#legend").append("p").text(name).attr("style", "color: " + color);
-    return { name: name, path: path, line: line, data: data, color: color, t0: null };
+    return { name: name, path: path, line: line, data: data, color: color };
   };
 
 GRAPHS = {}
