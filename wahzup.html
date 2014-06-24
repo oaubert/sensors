@@ -114,9 +114,9 @@ function Graph(name, sensorlabel, t0) {
     var data = [];
     var color = COLORS.shift();
 
-    T0[sensorlabel] = t0;
+    T0[name] = t0;
     var line = d3.svg.line.radial()
-        .angle(function(d, i) { return x(d.ts - T0[sensorlabel]); })
+        .angle(function(d, i) { return x(d.ts - T0[name]); })
         .radius(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
