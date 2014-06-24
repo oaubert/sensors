@@ -91,6 +91,7 @@ var LABEL = {
 }
 
 var INDEX = 0;
+var OFFSET = 6;
 // Duration in microseconds
 var duration = 30000000;
 var t0 = null;
@@ -134,7 +135,7 @@ function Graph(name, sensorlabel, t0, index) {
     T0[name] = t0;
     var line = d3.svg.line.radial()
         .angle(function(d, i) { return x(d.ts - T0[name]); })
-        .radius(function(d, i) { return index + y(d.v * (FACTOR[sensorlabel] || 1)); });
+        .radius(function(d, i) { return index * OFFSET + y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
         .attr("data-name", name)
@@ -146,7 +147,7 @@ function Graph(name, sensorlabel, t0, index) {
         .attr("d", line)
         .style("stroke", color);
 
-    d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color + "; font-family: arial; font-size: 20pt;");
+    d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color + "; font-family: arial; font-size: 16pt;");
     return { name: name, path: path, line: line, data: data, color: color, last: 0, index: index };
   };
 
@@ -208,8 +209,7 @@ ws.onmessage = function (event) {
             name = r[fields.name];
         }
         if (GRAPHS[name] === undefined) {
-            GRAPHS[name] = Graph(name, r[fields.name], last_t, INDEX);
-            INDEX += 6;
+            GRAPHS[name] = Graph(name, r[fields.name], last_t, INDEX++);
         }
         v = Number(r[fields.value] + (r[fields.factor] || ""));
         GRAPHS[name].data.push({ ts: last_t, v: v });
@@ -228,8 +228,7 @@ ws.onmessage = function (event) {
   var sbConnection = new SensorsBox.Connection({verbose: false});
   window.sbConnection = sbConnection;
   sbConnection.on('connect', function(){
-      GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t, INDEX);
-      INDEX += 6;
+      GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t, INDEX++);
       T0[SENSOR] = 1000 * new Date().getTime();
       sbConnection.watchSensor(SENSOR, function(err, sensor) {
           console.log('successfully watching ' + sensor.name);
