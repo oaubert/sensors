@@ -141,7 +141,7 @@ function Graph(name, sensorlabel, t0, index) {
         .attr("d", line)
         .style("stroke", color);
 
-    d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color + "; font-family: arial; font-size: 24pt;");
+    d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color + "; font-family: arial; font-size: 20pt;");
     return { name: name, path: path, line: line, data: data, color: color, last: 0, index: index };
   };
 
