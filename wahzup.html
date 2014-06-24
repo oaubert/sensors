@@ -204,7 +204,7 @@ ws.onmessage = function (event) {
         }
         if (GRAPHS[name] === undefined) {
             GRAPHS[name] = Graph(name, r[fields.name], last_t, INDEX);
-            INDEX += 3;
+            INDEX += 10;
         }
         v = Number(r[fields.value] + (r[fields.factor] || ""));
         GRAPHS[name].data.push({ ts: last_t, v: v });
