@@ -223,7 +223,8 @@ ws.onmessage = function (event) {
   var sbConnection = new SensorsBox.Connection({verbose: false});
   window.sbConnection = sbConnection;
   sbConnection.on('connect', function(){
-      GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t);
+      GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t, INDEX);
+      INDEX += 10;
       T0[SENSOR] = 1000 * new Date().getTime();
       sbConnection.watchSensor(SENSOR, function(err, sensor) {
           console.log('successfully watching ' + sensor.name);
