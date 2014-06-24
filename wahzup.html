@@ -73,6 +73,17 @@ var FACTOR = {
     '5399d19e0491140200114b7b': 100, // Mobile
     '538e3d734793150200b10653': 100.0 / 1023 // Sound
 }
+var LABEL = {
+    'EmotivData.LongTermExcitement': "EEG - Long term excitement",
+    'EmotivData.GyroX': "EEG - Gyroscope X",
+    'EmotivData.GyroY': "EEG - Gyroscope Y",
+    'EmotivData.ShortTermExcitement': "EEG - Short term excitement",
+    'EmotivData.AffectivEngagementBoredomScore': "EEG - Engagement/Boredom",
+    'fr.smoozi.rt.fc': "T-shirt - fréquence cardiaque",
+    'com.smartsensing.data.Hr':  "T-shirt - fréquence cardiaque",
+    'sensopulse.acc': "Mobile - accélération",
+    '538e3d734793150200b10653': "Sensorsbox - volume sonore"
+}
 
 // Duration in microseconds
 var duration = 30000000;
@@ -129,7 +140,7 @@ function Graph(name, sensorlabel, t0) {
         .attr("d", line)
         .style("stroke", color);
 
-    d3.select("#legend").append("p").text(name).attr("style", "color: " + color);
+    d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color);
     return { name: name, path: path, line: line, data: data, color: color, last: 0 };
   };
 
