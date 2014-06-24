@@ -36,7 +36,7 @@ svg {
 <script src="d3.v3.min.js"></script>
 <script type="text/javascript">
 
-var COLORS = d3.scale.category20c().range();
+var COLORS = d3.scale.category10().range();
 COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
 var SUBSCRIPTION = '~.*(acc|Gyro|TermExcitement|EngagementBoredom|smoozi.rt.fc).*{}';
@@ -130,7 +130,7 @@ function Graph(name, sensorlabel, t0) {
         .style("stroke", color);
 
     d3.select("#legend").append("p").text(name).attr("style", "color: " + color);
-    return { name: name, path: path, line: line, data: data, color: color, t0: null };
+    return { name: name, path: path, line: line, data: data, color: color, last: 0 };
   };
 
 GRAPHS = {}
@@ -147,14 +147,13 @@ function tick() {
     // redraw the lines, and slide them to the left if necessary;
     for (var n in GRAPHS) {
         g = GRAPHS[n];
-        var new_t = g.data.slice(-1).ts;
         g.path.attr("d", g.line);
         // pop old data points off the front
         while (g.data.length && g.data[0].ts < T0[n] - 1000) {
             g.data.shift();
         }
-        if (new_t - duration > T0[n])
-            T0[n] = new_t - duration;
+        if (g.last - T0[n] > duration)
+            T0[n] = g.last - duration;
     }
 }
 
@@ -196,6 +195,7 @@ ws.onmessage = function (event) {
         }
         v = Number(r[fields.value] + (r[fields.factor] || ""));
         GRAPHS[name].data.push({ ts: last_t, v: v });
+        GRAPHS[name].last = last_t;
     } else {
         console.log("Non matching line", event.data);
     }
@@ -207,7 +207,8 @@ ws.onmessage = function (event) {
   var sbConnection = new SensorsBox.Connection({verbose: false});
   window.sbConnection = sbConnection;
   sbConnection.on('connect', function(){
-      GRAPHS[SENSOR] = Graph("Sound", SENSOR);
+      GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t);
+      T0[SENSOR] = 1000 * new Date().getTime();
       sbConnection.watchSensor(SENSOR, function(err, sensor) {
           console.log('successfully watching ' + sensor.name);
       });
@@ -218,6 +219,7 @@ ws.onmessage = function (event) {
           t0 = last_t;
       GRAPHS[SENSOR].data.push({ ts: last_t,
                                  v: Number(measure.data.value) });
+      GRAPHS[SENSOR].last = last_t;
   });
 
 // Main loop
