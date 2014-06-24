@@ -220,28 +220,28 @@ ws.onmessage = function (event) {
 }
 
 
-// Sensorbox
-
-  var SENSOR = '538e3d734793150200b10653'; // Sound (box)
-//  var SENSOR = '5399d19e0491140200114b7b'; // Test (box)
-  // Sensorsbox
-  var sbConnection = new SensorsBox.Connection({verbose: false});
-  window.sbConnection = sbConnection;
-  sbConnection.on('connect', function(){
-      GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t, INDEX++);
-      T0[SENSOR] = 1000 * new Date().getTime();
-      sbConnection.watchSensor(SENSOR, function(err, sensor) {
-          console.log('successfully watching ' + sensor.name);
-      });
-  })
-  sbConnection.on('measure', function(measure) {
-      last_t = 1000 * new Date().getTime();
-      if (t0 === null)
-          t0 = last_t;
-      GRAPHS[SENSOR].data.push({ ts: last_t,
-                                 v: Number(measure.data.value) });
-      GRAPHS[SENSOR].last = last_t;
-  });
+// // Sensorbox
+// 
+//   var SENSOR = '538e3d734793150200b10653'; // Sound (box)
+// //  var SENSOR = '5399d19e0491140200114b7b'; // Test (box)
+//   // Sensorsbox
+//   var sbConnection = new SensorsBox.Connection({verbose: false});
+//   window.sbConnection = sbConnection;
+//   sbConnection.on('connect', function(){
+//       GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t, INDEX++);
+//       T0[SENSOR] = 1000 * new Date().getTime();
+//       sbConnection.watchSensor(SENSOR, function(err, sensor) {
+//           console.log('successfully watching ' + sensor.name);
+//       });
+//   })
+//   sbConnection.on('measure', function(measure) {
+//       last_t = 1000 * new Date().getTime();
+//       if (t0 === null)
+//           t0 = last_t;
+//       GRAPHS[SENSOR].data.push({ ts: last_t,
+//                                  v: Number(measure.data.value) });
+//       GRAPHS[SENSOR].last = last_t;
+//   });
 
 // Main loop
 
