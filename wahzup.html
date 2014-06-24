@@ -85,6 +85,7 @@ var LABEL = {
     '538e3d734793150200b10653': "Sensorsbox - volume sonore"
 }
 
+var INDEX = 0;
 // Duration in microseconds
 var duration = 30000000;
 var t0 = null;
@@ -121,14 +122,14 @@ svg.append("defs").append("clipPath")
 //    .attr("transform", "translate(" + width /2 + ",0)")
 //    .call(d3.svg.axis().scale(y).orient("left"));
 
-function Graph(name, sensorlabel, t0) {
+function Graph(name, sensorlabel, t0, index) {
     var data = [];
     var color = COLORS.shift();
 
     T0[name] = t0;
     var line = d3.svg.line.radial()
         .angle(function(d, i) { return x(d.ts - T0[name]); })
-        .radius(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
+        .radius(function(d, i) { return index + y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
         .attr("data-name", name)
@@ -141,7 +142,7 @@ function Graph(name, sensorlabel, t0) {
         .style("stroke", color);
 
     d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color);
-    return { name: name, path: path, line: line, data: data, color: color, last: 0 };
+    return { name: name, path: path, line: line, data: data, color: color, last: 0, index: index };
   };
 
 GRAPHS = {}
@@ -202,7 +203,8 @@ ws.onmessage = function (event) {
             name = r[fields.name];
         }
         if (GRAPHS[name] === undefined) {
-            GRAPHS[name] = Graph(name, r[fields.name], last_t);
+            GRAPHS[name] = Graph(name, r[fields.name], last_t, INDEX);
+            INDEX += 3;
         }
         v = Number(r[fields.value] + (r[fields.factor] || ""));
         GRAPHS[name].data.push({ ts: last_t, v: v });
