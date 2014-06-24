@@ -39,7 +39,7 @@ svg {
 var COLORS = d3.scale.category10().range();
 COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
-var SUBSCRIPTION = '~.*(acc|Gyro|TermExcitement|EngagementBoredom|smoozi.rt.fc).*{}';
+var SUBSCRIPTION = '~.*(acc|Gyro|Term|smoozi.rt.fc).*{}';
 //var SUBSCRIPTION = '~.*(acc|smoozi.rt.fc).*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
 var VMAX = 100;
@@ -62,8 +62,11 @@ var FACTOR = {
     'EmotivData.ExpressivStateFurrow': 50.0,
     'EmotivData.ExpressivStateSmile': 50.0,
     'EmotivData.LongTermExcitement': 100.0,
+    'EmotivData.AffectivExcitementShortTerm': 1000.0,
+    'EmotivData.AffectivExcitementLongTerm': 1000.0,
     'EmotivData.ShortTermExcitement': 100.0,
     'EmotivData.EngagementBoredom': 100.0,
+    'EngagementBoredom': 100.0,
     'fr.smoozi.rt.fc': 100.0 / 240,
     'com.smartsensing.data.Hr':  100.0 / 130,
     'sensopulse.x': 100.0 / 4,
@@ -75,10 +78,11 @@ var FACTOR = {
 }
 var LABEL = {
     'EmotivData.LongTermExcitement': "EEG - Long term excitement",
-    'EmotivData.GyroX': "EEG - Gyroscope X",
-    'EmotivData.GyroY': "EEG - Gyroscope Y",
+    'EmotivData.GyroX': "EEG - Mouvement",
     'EmotivData.ShortTermExcitement': "EEG - Short term excitement",
     'EmotivData.AffectivEngagementBoredomScore': "EEG - Engagement/Boredom",
+    'EmotivData.AffectivExcitementShortTerm': 'EEG - Short term excitement',
+    'EmotivData.AffectivExcitementLongTerm': 'EEG - Long term excitement',
     'fr.smoozi.rt.fc': "T-shirt - fréquence cardiaque",
     'com.smartsensing.data.Hr':  "T-shirt - fréquence cardiaque",
     'sensopulse.acc': "Mobile - accélération",
@@ -204,7 +208,7 @@ ws.onmessage = function (event) {
         }
         if (GRAPHS[name] === undefined) {
             GRAPHS[name] = Graph(name, r[fields.name], last_t, INDEX);
-            INDEX += 10;
+            INDEX += 6;
         }
         v = Number(r[fields.value] + (r[fields.factor] || ""));
         GRAPHS[name].data.push({ ts: last_t, v: v });
@@ -224,7 +228,7 @@ ws.onmessage = function (event) {
   window.sbConnection = sbConnection;
   sbConnection.on('connect', function(){
       GRAPHS[SENSOR] = Graph("Sound", SENSOR, last_t, INDEX);
-      INDEX += 10;
+      INDEX += 6;
       T0[SENSOR] = 1000 * new Date().getTime();
       sbConnection.watchSensor(SENSOR, function(err, sensor) {
           console.log('successfully watching ' + sensor.name);
