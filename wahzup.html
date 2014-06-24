@@ -47,7 +47,7 @@ svg {
 var COLORS = d3.scale.category10().range();
 COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
-var SUBSCRIPTION = '~.*(acc|GyroX|ShortTerm|smoozi.rt.fc).*{}';
+var SUBSCRIPTION = '~.*(sensopulse.acc|GyroX|ShortTerm|smoozi.rt.fc).*{}';
 //var SUBSCRIPTION = '~.*(acc|smoozi.rt.fc).*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
 var VMAX = 100;
@@ -159,7 +159,7 @@ function Graph(name, sensorlabel, t0, index) {
         .attr("d", line)
         .style("stroke", color);
 
-    d3.select("#legend").append("p").text(LABEL[sensorlabel]).attr("style", "color: " + color + "; font-family: arial; font-size: 16pt;");
+    d3.select("#legend").append("p").text(LABEL[sensorlabel] || sensorlabel).attr("style", "color: " + color + "; font-family: arial; font-size: 16pt;");
     return { name: name, path: path, line: line, data: data, color: color, last: 0, index: index };
   };
 
