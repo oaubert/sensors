@@ -40,6 +40,7 @@ var COLORS = d3.scale.category20c().range();
 COLORS = COLORS.concat(COLORS);
 var TOKEN = 'jc20140624.read';
 var SUBSCRIPTION = '~.*(acc|Gyro|TermExcitement|EngagementBoredom|smoozi.rt.fc).*{}';
+//var SUBSCRIPTION = '~.*(acc|smoozi.rt.fc).*{}';
 // var SUBSCRIPTION = '=' + NAME + '{}'
 var VMAX = 100;
 if (document.location.hash) {
@@ -76,6 +77,7 @@ var FACTOR = {
 // Duration in microseconds
 var duration = 30000000;
 var t0 = null;
+var T0 = {};
 var last_t = null;
 
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -108,12 +110,13 @@ svg.append("defs").append("clipPath")
 //    .attr("transform", "translate(" + width /2 + ",0)")
 //    .call(d3.svg.axis().scale(y).orient("left"));
 
-function Graph(name, sensorlabel) {
+function Graph(name, sensorlabel, t0) {
     var data = [];
     var color = COLORS.shift();
 
+    T0[sensorlabel] = t0;
     var line = d3.svg.line.radial()
-        .angle(function(d, i) { return x(d.ts - t0); })
+        .angle(function(d, i) { return x(d.ts - T0[sensorlabel]); })
         .radius(function(d, i) { return y(d.v * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
@@ -127,7 +130,7 @@ function Graph(name, sensorlabel) {
         .style("stroke", color);
 
     d3.select("#legend").append("p").text(name).attr("style", "color: " + color);
-    return { name: name, path: path, line: line, data: data, color: color };
+    return { name: name, path: path, line: line, data: data, color: color, t0: null };
   };
 
 GRAPHS = {}
@@ -144,11 +147,14 @@ function tick() {
     // redraw the lines, and slide them to the left if necessary;
     for (var n in GRAPHS) {
         g = GRAPHS[n];
+        var new_t = g.data.slice(-1).ts;
         g.path.attr("d", g.line);
         // pop old data points off the front
-        while (g.data.length && g.data[0].ts < t0 - 1000) {
+        while (g.data.length && g.data[0].ts < T0[n] - 1000) {
             g.data.shift();
         }
+        if (new_t - duration > T0[n])
+            T0[n] = new_t - duration;
     }
 }
 
@@ -186,7 +192,7 @@ ws.onmessage = function (event) {
             name = r[fields.name];
         }
         if (GRAPHS[name] === undefined) {
-            GRAPHS[name] = Graph(name, r[fields.name]);
+            GRAPHS[name] = Graph(name, r[fields.name], last_t);
         }
         v = Number(r[fields.value] + (r[fields.factor] || ""));
         GRAPHS[name].data.push({ ts: last_t, v: v });
