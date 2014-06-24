@@ -206,9 +206,10 @@ ws.onmessage = function (event) {
       });
   })
   sbConnection.on('measure', function(measure) {
+      last_t = 1000 * new Date().getTime();
       if (t0 === null)
-          t0 = 1000 * new Date().getTime();
-      GRAPHS[SENSOR].data.push({ ts: 1000 * new Date().getTime(),
+          t0 = last_t;
+      GRAPHS[SENSOR].data.push({ ts: last_t,
                                  v: Number(measure.data.value) });
   });
 
