@@ -75,7 +75,7 @@ var FACTOR = {
     'EmotivData.ShortTermExcitement': 100.0,
     'EmotivData.EngagementBoredom': 100.0,
     'EngagementBoredom': 100.0,
-    'fr.smoozi.rt.fc': 100.0 / 240,
+    'fr.smoozi.rt.fc': 1000.0,
     'com.smartsensing.data.Hr':  100.0 / 130,
     'sensopulse.x': 100.0 / 4,
     'sensopulse.y': 100.0 / 4,
@@ -84,6 +84,10 @@ var FACTOR = {
     '5399d19e0491140200114b7b': 100, // Mobile
     '538e3d734793150200b10653': 100.0 / 1023 // Sound
 }
+var OFFSET = {
+    'fr.smoozi.rt.fc': -70
+}
+
 var LABEL = {
     'EmotivData.LongTermExcitement': "EEG - Long term excitement",
     'EmotivData.GyroX': "EEG - Mouvement X",
@@ -143,7 +147,7 @@ function Graph(name, sensorlabel, t0, index) {
     T0[name] = t0;
     var line = d3.svg.line.radial()
         .angle(function(d, i) { return x(d.ts - T0[name]); })
-        .radius(function(d, i) { return index * OFFSET + y(d.v * (FACTOR[sensorlabel] || 1)); });
+        .radius(function(d, i) { return index * OFFSET + y((d.v + (OFFSET[sensorlabel] || 0)) * (FACTOR[sensorlabel] || 1)); });
 
     var path = svg.append("g")
         .attr("data-name", name)
@@ -254,7 +258,7 @@ ws.onmessage = function (event) {
 // Main loop
 
 tick();
-setInterval(tick, 500);
+setInterval(tick, 100);
 
 </script>
 </body>
