@@ -77,6 +77,13 @@ body{
         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
         return v.toString(16);
     });
+    if (window.localStorage !== undefined) {
+        if (localStorage['USERID'] === undefined) {
+            localStorage['USERID'] = USERID;
+        } else {
+            USERID = localStorage['USERID'];
+        }
+    }
     var startup = function() {
 
         if (!window.DeviceMotionEvent) {
