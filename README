@@ -1,0 +1,29 @@
+Collection of various files used during a seminar dedicated to sensor data
+==========================================================================
+
+The most interesting file is wahzup.html, which was the file displayed
+(and hacked live) during the seminar. It is built upon
+graph_citizen.html. It cannot be used as is anymore, since it relies
+on an access to the CitizenData platform.
+
+The accelerometer collection pages cz.html (which sends data to the
+CitizenData platform) and box.html (which sends data to the
+stereolux's sensorbox) are derived from
+https://github.com/Kanasansoft/Graph-of-Accelerometer.git
+
+scenopulse is a proof of concept visualisation - see
+https://twitter.com/scenopulse for more information.
+
+Ongoing work
+============
+
+To remove the dependency on CitizenData, a standalone version is being
+developped. Its server, server.py, serves the html files (collection
+and visualisation) and is also the websocket server broadcasting
+messages.
+
+To use it, run it
+
+  python server.py
+
+and open http://localhost:9000/static/sensor.html
